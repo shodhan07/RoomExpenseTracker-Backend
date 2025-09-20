@@ -12,8 +12,10 @@ const app = express();
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*', // allow your frontend
-  credentials: true
+  origin: process.env.CORS_ORIGIN, // must match frontend URL exactly
+  credentials: true,
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
 
 app.get('/', (req,res)=>res.json({status:'ok'}));
