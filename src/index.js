@@ -9,14 +9,16 @@ import expenseRoutes from './routes/expenseRoutes.js';
 dotenv.config();
 const app = express();
 
-// CORS setup
+// Parse allowed origins from env
 const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
+
+// CORS middleware
 app.use(cors({
-  origin: function(origin, callback) {
-    // allow requests with no origin like mobile apps or curl
+  origin: (origin, callback) => {
+    // allow requests with no origin (like Postman or mobile apps)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy: Origin not allowed'));
+    return callback(new Error(`CORS policy: Origin not allowed: ${origin}`));
   },
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
@@ -26,10 +28,14 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.get('/', (req,res) => res.json({status:'ok'}));
+// Health check
+app.get('/', (req, res) => res.json({ status: 'ok' }));
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', expenseRoutes);
 
+// Start server after DB connection
 const port = process.env.PORT || 4000;
 
 testConnection()
