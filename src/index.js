@@ -9,26 +9,34 @@ import expenseRoutes from './routes/expenseRoutes.js';
 dotenv.config();
 const app = express();
 
-app.use(express.json());
-app.use(morgan('dev'));
+// CORS setup
+const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
 app.use(cors({
-  origin: process.env.CORS_ORIGIN, // must match frontend URL exactly
+  origin: function(origin, callback) {
+    // allow requests with no origin like mobile apps or curl
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS policy: Origin not allowed'));
+  },
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 }));
 
-app.get('/', (req,res)=>res.json({status:'ok'}));
+app.use(express.json());
+app.use(morgan('dev'));
+
+app.get('/', (req,res) => res.json({status:'ok'}));
 app.use('/api/auth', authRoutes);
 app.use('/api', expenseRoutes);
 
 const port = process.env.PORT || 4000;
 
 testConnection()
-  .then(()=> {
+  .then(() => {
     app.listen(port, () => console.log(`API listening on ${port}`));
   })
-  .catch((err)=>{
+  .catch((err) => {
     console.error('DB connection failed:', err);
     process.exit(1);
   });
